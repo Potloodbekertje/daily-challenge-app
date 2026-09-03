@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Daily Challenge</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  
+  <!-- We laden Tailwind CSS in voor een professioneel, modern design -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    /* Zorgt voor een 'app-feel' zonder lelijke selectievlakken als je klikt */
+    body { -webkit-tap-highlight-color: transparent; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col items-center justify-center p-4">
+
+  <!-- =============================== -->
+  <!-- INLOG SCHERM                    -->
+  <!-- =============================== -->
+  <div id="login-screen" class="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 hidden">
+    <h1 class="text-2xl font-bold text-center mb-6 text-indigo-600">Welkom!</h1>
+    <p class="text-gray-500 text-sm text-center mb-6">Log in om de challenge van vandaag te bekijken.</p>
+    
+    <div class="mb-4">
+      <label class="block text-sm font-semibold mb-2">Wie ben jij?</label>
+      <select id="input-name" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500">
+        <option value="" disabled selected>Kies je naam...</option>
+        
+        <!-- HIER_AANPASSEN: Vul hier jullie exacte namen in zoals ze in de Google Sheet (tabblad Gebruikers) staan -->
+        <option value="Onno">Onno</option>
+        <option value="Kelly">Kelly</option>
+        
+      </select>
+    </div>
+
+    <div class="mb-6">
+      <label class="block text-sm font-semibold mb-2">Pincode</label>
+      <input type="password" id="input-pin" placeholder="Vul jullie geheime code in" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500">
+    </div>
+
+    <button onclick="saveLogin()" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-indigo-700 transition">
+      Start App
+    </button>
+    <p id="login-error" class="text-red-500 text-sm text-center mt-4 hidden">Foutieve pincode of netwerkfout.</p>
+  </div>
+
+  <!-- =============================== -->
+  <!-- HOOFD SCHERM (DE APP)           -->
+  <!-- =============================== -->
+  <div id="app-screen" class="w-full max-w-md hidden">
+    
+    <div class="flex justify-between items-center mb-8 px-2">
+      <div>
+        <p class="text-sm text-slate-400 font-medium">Daily Challenge</p>
+        <h2 id="welcome-text" class="text-xl font-bold text-slate-800">Hallo!</h2>
+      </div>
+      <button onclick="logout()" class="text-sm text-indigo-600 font-semibold bg-indigo-50 px-3 py-1 rounded-full">Uitloggen</button>
+    </div>
+
+    <div id="loading" class="text-center text-slate-400 py-10">
+      <p class="animate-pulse font-medium">Data ophalen...</p>
+    </div>
+
+    <div id="challenge-card" class="bg-white rounded-3xl shadow-lg p-6 hidden">
+      <div id="challenge-active" class="hidden">
+        <span id="cat-badge" class="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full mb-4 uppercase tracking-wide">Categorie</span>
+        <h3 class="text-2xl font-extrabold text-slate-800 mb-2 leading-tight">Jouw challenge vandaag:</h3>
+        <p id="chal-text" class="text-slate-600 text-lg mb-6">De challenge tekst komt hier.</p>
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <p class="text-sm text-slate-500 text-center font-medium">Succes vandaag! 🎯</p>
+        </div>
+      </div>
+      
+      <div id="challenge-waiting" class="hidden text-center py-6">
+        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">☕</div>
+        <h3 class="text-xl font-bold text-slate-800 mb-2">Vandaag is <span id="partner-name" class="text-indigo-600">de ander</span> aan de beurt!</h3>
+        <p class="text-slate-500">Leun achterover en laat je verrassen.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =============================== -->
+  <!-- JAVASCRIPT (DE LOGICA)          -->
+  <!-- =============================== -->
+  <script>
+  
+  if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+	
+    // HIER_AANPASSEN: Plak hieronder jouw gekopieerde Web-app URL tussen de aanhalingstekens
+    const API_URL = "https://script.google.com/macros/s/AKfycbyFVB4kcZRTk8_KE3R-BDOsfUJcrh_01bOSbnI0MIp429bf9DempuKlKmTUg85SPkSG/exec";
+
+    const loginScreen = document.getElementById('login-screen');
+    const appScreen = document.getElementById('app-screen');
+    
+    // Controleer bij het openen of we al zijn ingelogd
+    window.onload = () => {
+      const savedName = localStorage.getItem('dc_name');
+      const savedPin = localStorage.getItem('dc_pin');
+      
+      if (savedName && savedPin) {
+        showAppScreen(savedName, savedPin);
+      } else {
+        loginScreen.classList.remove('hidden');
+      }
+    };
+
+    function saveLogin() {
+      const name = document.getElementById('input-name').value;
+      const pin = document.getElementById('input-pin').value;
+      
+      if(!name || !pin) return alert("Vul alles in");
+
+      // We slaan de gegevens lokaal op de telefoon op
+      localStorage.setItem('dc_name', name);
+      localStorage.setItem('dc_pin', pin);
+      
+      loginScreen.classList.add('hidden');
+      showAppScreen(name, pin);
+    }
+
+    function logout() {
+      localStorage.removeItem('dc_name');
+      localStorage.removeItem('dc_pin');
+      window.location.reload();
+    }
+
+    async function showAppScreen(name, pin) {
+      appScreen.classList.remove('hidden');
+      document.getElementById('welcome-text').innerText = "Hallo, " + name + "!";
+      
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'getToday', pin: pin })
+        });
+        
+        const data = await response.json();
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('challenge-card').classList.remove('hidden');
+
+        if (data.error) {
+          logout(); // Verkeerde pincode
+          return;
+        }
+
+        if (!data.challenge) {
+          document.getElementById('challenge-waiting').classList.remove('hidden');
+          document.getElementById('partner-name').innerText = "niemand";
+          return;
+        }
+
+        // Bepalen we wat we laten zien
+        if (data.challenge.gebruiker === name) {
+          // Deze gebruiker is aan de beurt!
+          document.getElementById('challenge-active').classList.remove('hidden');
+          document.getElementById('cat-badge').innerText = data.challenge.categorie;
+          document.getElementById('chal-text').innerText = data.challenge.challenge;
+        } else {
+          // De ander is aan de beurt
+          document.getElementById('challenge-waiting').classList.remove('hidden');
+          document.getElementById('partner-name').innerText = data.challenge.gebruiker;
+        }
+        
+      } catch (err) {
+        alert("Fout bij ophalen data. Check je internetverbinding.");
+        logout();
+      }
+    }
+  </script>
+</body>
+</html>
