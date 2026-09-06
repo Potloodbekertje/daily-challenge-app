@@ -1,7 +1,7 @@
 {
   "name": "NextUp",
   "short_name": "NextUp",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0a0a0c",
   "theme_color": "#0a0a0c",
