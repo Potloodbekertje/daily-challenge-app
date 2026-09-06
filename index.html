@@ -10,26 +10,12 @@
   <title>Daily Challenge</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <style>
-    body { -webkit-tap-highlight-color: transparent; }
-    .hidden { display: none; }
-    
-    /* Zorgt voor een zachte glow achter de actieve challenge */
-    .glow-effect {
-      box-shadow: 0 0 40px -10px rgba(168, 85, 247, 0.4);
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-[#0a0a0c] text-gray-300 font-sans antialiased min-h-screen flex flex-col items-center justify-center p-4">
 
-  <!-- =============================== -->
-  <!-- INLOG SCHERM                    -->
-  <!-- =============================== -->
   <div id="login-screen" class="w-full max-w-md bg-[#16161a] border border-white/5 rounded-3xl shadow-2xl p-8 hidden relative overflow-hidden">
-    <!-- Subtiele achtergrond glow in het paneel -->
     <div class="absolute -top-10 -right-10 w-32 h-32 bg-purple-600/20 rounded-full blur-3xl"></div>
-    
     <h1 class="text-2xl font-medium text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 relative z-10">Welkom terug</h1>
     
     <div class="mb-5 relative z-10">
@@ -39,7 +25,7 @@
         
         <!-- HIER_AANPASSEN: Vul hier jullie namen in -->
         <option value="Onno">Onno</option>
-        <option value="Kelly">Kelly</option>
+        <option value="Partner Naam">Partner Naam</option>
         
       </select>
     </div>
@@ -54,11 +40,7 @@
     </button>
   </div>
 
-  <!-- =============================== -->
-  <!-- HOOFD SCHERM (DE APP)           -->
-  <!-- =============================== -->
   <div id="app-screen" class="w-full max-w-md hidden">
-    
     <div class="flex justify-between items-center mb-10 px-2">
       <div>
         <p class="text-xs uppercase tracking-widest text-purple-400/80 mb-1">Daily Challenge</p>
@@ -72,7 +54,6 @@
     </div>
 
     <div id="challenge-card" class="bg-[#16161a] border border-white/5 rounded-[2rem] shadow-2xl p-8 hidden relative overflow-hidden">
-      
       <div id="challenge-active" class="hidden relative z-10">
         <div class="flex items-center space-x-3 mb-6">
           <div class="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
@@ -80,7 +61,6 @@
         </div>
         <h3 class="text-3xl font-light text-white mb-4 leading-tight glow-effect rounded-lg">Jouw beurt</h3>
         <p id="chal-text" class="text-gray-400 text-lg mb-8 leading-relaxed">De challenge tekst komt hier.</p>
-        
         <div class="w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent mb-6"></div>
         <p class="text-xs text-center text-gray-600 uppercase tracking-widest">Geniet ervan</p>
       </div>
@@ -92,92 +72,11 @@
         <h3 class="text-xl font-light text-white mb-3"><span id="partner-name" class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 font-medium">De ander</span> is aan de beurt</h3>
         <p class="text-gray-500 text-sm font-light">Leun achterover en laat je verrassen vandaag.</p>
       </div>
-      
-      <!-- Subtiele glow onderin de kaart -->
       <div class="absolute -bottom-16 -left-16 w-40 h-40 bg-pink-600/10 rounded-full blur-3xl pointer-events-none"></div>
     </div>
-
   </div>
 
-  <script>
-    // HIER_AANPASSEN: Plak hieronder jouw gekopieerde Web-app URL
-    const API_URL = "https://script.google.com/macros/s/AKfycbyFVB4kcZRTk8_KE3R-BDOsfUJcrh_01bOSbnI0MIp429bf9DempuKlKmTUg85SPkSG/exec";
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
-
-    const loginScreen = document.getElementById('login-screen');
-    const appScreen = document.getElementById('app-screen');
-    
-    window.onload = () => {
-      const savedName = localStorage.getItem('dc_name');
-      const savedPin = localStorage.getItem('dc_pin');
-      
-      if (savedName && savedPin) {
-        showAppScreen(savedName, savedPin);
-      } else {
-        loginScreen.classList.remove('hidden');
-      }
-    };
-
-    function saveLogin() {
-      const name = document.getElementById('input-name').value;
-      const pin = document.getElementById('input-pin').value;
-      
-      if(!name || !pin) return;
-
-      localStorage.setItem('dc_name', name);
-      localStorage.setItem('dc_pin', pin);
-      
-      loginScreen.classList.add('hidden');
-      showAppScreen(name, pin);
-    }
-
-    function logout() {
-      localStorage.removeItem('dc_name');
-      localStorage.removeItem('dc_pin');
-      window.location.reload();
-    }
-
-    async function showAppScreen(name, pin) {
-      appScreen.classList.remove('hidden');
-      document.getElementById('welcome-text').innerText = "Hallo " + name;
-      
-      try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'getToday', pin: pin })
-        });
-        
-        const data = await response.json();
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('challenge-card').classList.remove('hidden');
-
-        if (data.error) {
-          logout();
-          return;
-        }
-
-        if (!data.challenge) {
-          document.getElementById('challenge-waiting').classList.remove('hidden');
-          document.getElementById('partner-name').innerText = "Niemand";
-          return;
-        }
-
-        if (data.challenge.gebruiker === name) {
-          document.getElementById('challenge-active').classList.remove('hidden');
-          document.getElementById('cat-badge').innerText = data.challenge.categorie;
-          document.getElementById('chal-text').innerText = data.challenge.challenge;
-        } else {
-          document.getElementById('challenge-waiting').classList.remove('hidden');
-          document.getElementById('partner-name').innerText = data.challenge.gebruiker;
-        }
-        
-      } catch (err) {
-        logout();
-      }
-    }
-  </script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

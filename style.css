@@ -1,0 +1,12 @@
+body { 
+  -webkit-tap-highlight-color: transparent; 
+}
+
+.hidden { 
+  display: none; 
+}
+
+/* Zorgt voor een zachte glow achter de actieve challenge */
+.glow-effect {
+  box-shadow: 0 0 40px -10px rgba(168, 85, 247, 0.4);
+}
