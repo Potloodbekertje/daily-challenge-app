@@ -1,16 +1,3 @@
-window.onload = () => {
-  loadUsersDropdown(); // <--- Deze regel is nieuw
-  
-  const savedName = localStorage.getItem('dc_name');
-  const savedPin = localStorage.getItem('dc_pin');
-  
-  if (savedName && savedPin) {
-    showAppScreen(savedName, savedPin);
-  } else {
-    loginScreen.classList.remove('hidden');
-  }
-};
-
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
@@ -19,6 +6,8 @@ const loginScreen = document.getElementById('login-screen');
 const appScreen = document.getElementById('app-screen');
 
 window.onload = () => {
+  loadUsersDropdown();
+  
   const savedName = localStorage.getItem('dc_name');
   const savedPin = localStorage.getItem('dc_pin');
   
@@ -28,6 +17,16 @@ window.onload = () => {
     loginScreen.classList.remove('hidden');
   }
 };
+
+function loadUsersDropdown() {
+  const selectMenu = document.getElementById('input-name');
+  APP_CONFIG.USERS.forEach(name => {
+    const option = document.createElement('option');
+    option.value = name;
+    option.innerText = name;
+    selectMenu.appendChild(option);
+  });
+}
 
 function saveLogin() {
   const name = document.getElementById('input-name').value;
@@ -40,16 +39,6 @@ function saveLogin() {
   
   loginScreen.classList.add('hidden');
   showAppScreen(name, pin);
-}
-
-function loadUsersDropdown() {
-  const selectMenu = document.getElementById('input-name');
-  APP_CONFIG.USERS.forEach(name => {
-    const option = document.createElement('option');
-    option.value = name;
-    option.innerText = name;
-    selectMenu.appendChild(option);
-  });
 }
 
 function logout() {

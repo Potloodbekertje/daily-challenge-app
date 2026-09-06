@@ -1,10 +1,10 @@
 {
-  "name": "Daily Challenge",
+  "name": "NextUp",
   "short_name": "NextUp",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#4f46e5",
+  "background_color": "#0a0a0c",
+  "theme_color": "#0a0a0c",
   "icons": [
     {
       "src": "icon.png",
