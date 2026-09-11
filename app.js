@@ -84,4 +84,31 @@ async function showAppScreen(name, pin) {
   } catch (err) {
     logout();
   }
+
+  async function rejectChallenge() {
+  const name = localStorage.getItem('dc_name');
+  const pin = localStorage.getItem('dc_pin');
+  
+  // Verberg de challenge en toon een specifieke laadtekst
+  document.getElementById('challenge-card').classList.add('hidden');
+  const loader = document.getElementById('loading');
+  loader.classList.remove('hidden');
+  loader.innerHTML = '<p class="animate-pulse font-light tracking-widest uppercase text-sm">Nieuwe challenge zoeken...</p>';
+  
+  try {
+    await fetch(APP_CONFIG.API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'reject', pin: pin, user: name })
+    });
+    
+    // Herstel de standaard laadtekst voor de volgende keer
+    loader.innerHTML = '<p class="animate-pulse font-light tracking-widest uppercase text-sm">Bezig met synchroniseren...</p>';
+    
+    // Herlaad het scherm met de nieuwe data
+    showAppScreen(name, pin);
+    
+  } catch (err) {
+    alert("Er is een netwerkfout opgetreden.");
+  }
+}
 }
