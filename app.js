@@ -1,11 +1,11 @@
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+  navigator.serviceWorker.register('sw.js').catch(console.error);
 }
 
 const loginScreen = document.getElementById('login-screen');
 const appScreen = document.getElementById('app-screen');
 
-window.onload = () => {
+document.addEventListener('DOMContentLoaded', () => {
   loadUsersDropdown();
   
   const savedName = localStorage.getItem('dc_name');
@@ -15,11 +15,14 @@ window.onload = () => {
     showAppScreen(savedName, savedPin);
   } else {
     loginScreen.classList.remove('hidden');
+    loginScreen.classList.add('fade-in');
   }
-};
+});
 
 function loadUsersDropdown() {
   const selectMenu = document.getElementById('input-name');
+  selectMenu.innerHTML = '<option value="" disabled selected>Selecteer je naam...</option>';
+  
   APP_CONFIG.USERS.forEach(name => {
     const option = document.createElement('option');
     option.value = name;
@@ -32,7 +35,10 @@ function saveLogin() {
   const name = document.getElementById('input-name').value;
   const pin = document.getElementById('input-pin').value;
   
-  if(!name || !pin) return;
+  if(!name || !pin) {
+    alert("Vul aub je naam en pincode in.");
+    return;
+  }
 
   localStorage.setItem('dc_name', name);
   localStorage.setItem('dc_pin', pin);
@@ -49,6 +55,7 @@ function logout() {
 
 async function showAppScreen(name, pin) {
   appScreen.classList.remove('hidden');
+  appScreen.classList.add('fade-in');
   document.getElementById('welcome-text').innerText = "Hallo " + name;
   
   try {
@@ -58,57 +65,69 @@ async function showAppScreen(name, pin) {
     });
     
     const data = await response.json();
-    document.getElementById('loading').classList.add('hidden');
-    document.getElementById('challenge-card').classList.remove('hidden');
-
+    
     if (data.error) {
-      logout();
+      alert("Foutmelding: " + data.error);
+      if (data.error.includes("pincode")) logout();
       return;
     }
 
+    // Verberg de lader en toon de kaart met een animatie
+    document.getElementById('loading').classList.add('hidden');
+    const card = document.getElementById('challenge-card');
+    card.classList.remove('hidden');
+    card.classList.add('fade-in');
+
     if (!data.challenge) {
+      document.getElementById('challenge-active').classList.add('hidden');
       document.getElementById('challenge-waiting').classList.remove('hidden');
       document.getElementById('partner-name').innerText = "Niemand";
       return;
     }
 
     if (data.challenge.gebruiker === name) {
+      document.getElementById('challenge-waiting').classList.add('hidden');
       document.getElementById('challenge-active').classList.remove('hidden');
       document.getElementById('cat-badge').innerText = data.challenge.categorie;
       document.getElementById('chal-text').innerText = data.challenge.challenge;
     } else {
+      document.getElementById('challenge-active').classList.add('hidden');
       document.getElementById('challenge-waiting').classList.remove('hidden');
       document.getElementById('partner-name').innerText = data.challenge.gebruiker;
     }
     
   } catch (err) {
-    logout();
+    console.error("Netwerkfout:", err);
+    document.getElementById('loading-text').innerText = "Netwerkfout. Check je verbinding en ververs de app.";
   }
+}
 
-  async function rejectChallenge() {
+async function rejectChallenge() {
   const name = localStorage.getItem('dc_name');
   const pin = localStorage.getItem('dc_pin');
   
-  // Verberg de challenge en toon een specifieke laadtekst
   document.getElementById('challenge-card').classList.add('hidden');
-  const loader = document.getElementById('loading');
-  loader.classList.remove('hidden');
-  loader.innerHTML = '<p class="animate-pulse font-light tracking-widest uppercase text-sm">Nieuwe challenge zoeken...</p>';
+  document.getElementById('loading').classList.remove('hidden');
+  document.getElementById('loading-text').innerText = "Nieuwe challenge zoeken...";
   
   try {
-    await fetch(APP_CONFIG.API_URL, {
+    const response = await fetch(APP_CONFIG.API_URL, {
       method: 'POST',
       body: JSON.stringify({ action: 'reject', pin: pin, user: name })
     });
     
-    // Herstel de standaard laadtekst voor de volgende keer
-    loader.innerHTML = '<p class="animate-pulse font-light tracking-widest uppercase text-sm">Bezig met synchroniseren...</p>';
+    const data = await response.json();
     
-    // Herlaad het scherm met de nieuwe data
-    showAppScreen(name, pin);
+    if (data.success) {
+      document.getElementById('loading-text').innerText = "Bezig met synchroniseren...";
+      showAppScreen(name, pin);
+    } else {
+      alert("Er ging iets mis: " + data.error);
+      window.location.reload();
+    }
     
   } catch (err) {
-    alert("Er is een netwerkfout opgetreden.");
+    alert("Er is een netwerkfout opgetreden bij het afwijzen.");
+    window.location.reload();
   }
-}
 }
