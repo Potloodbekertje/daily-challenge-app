@@ -3,9 +3,26 @@ body {
 }
 
 .hidden { 
-  display: none; 
+  display: none !important; 
 }
 
+/* Zachte paarse gloed achter actieve teksten */
 .glow-effect {
   box-shadow: 0 0 40px -10px rgba(168, 85, 247, 0.4);
+}
+
+/* Premium fade-in animatie voor het wisselen van schermen */
+.fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
 }
