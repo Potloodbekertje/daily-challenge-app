@@ -6,23 +6,64 @@ body {
   display: none !important; 
 }
 
-/* Zachte paarse gloed achter actieve teksten */
+/* 1. Dynamische ademende glow achter de titel */
 .glow-effect {
-  box-shadow: 0 0 40px -10px rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 30px -10px rgba(168, 85, 247, 0.4);
+  animation: breatheGlow 4s ease-in-out infinite alternate;
 }
 
-/* Premium fade-in animatie voor het wisselen van schermen */
+@keyframes breatheGlow {
+  from { box-shadow: 0 0 20px -10px rgba(168, 85, 247, 0.2); }
+  to { box-shadow: 0 0 50px -5px rgba(236, 72, 153, 0.5); }
+}
+
+/* 2. Premium inlaad-animatie */
 .fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 @keyframes fadeIn {
   from { 
     opacity: 0; 
-    transform: translateY(10px); 
+    transform: translateY(15px); 
   }
   to { 
     opacity: 1; 
     transform: translateY(0); 
   }
+}
+
+/* 3. Zwevende 'Ambient Orbs' voor de achtergrond */
+.animate-float-slow {
+  animation: floatOrb 12s ease-in-out infinite;
+}
+
+.animate-float-slow-reverse {
+  animation: floatOrbReverse 15s ease-in-out infinite;
+}
+
+@keyframes floatOrb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-20px, 25px) scale(1.1); }
+}
+
+@keyframes floatOrbReverse {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(25px, -20px) scale(1.15); }
+}
+
+/* 4. Subtiele glans (shimmer) over de NextUp teksten */
+.animate-shimmer {
+  background-size: 200% auto;
+  animation: shimmer 4s linear infinite;
+}
+
+@keyframes shimmer {
+  to { background-position: 200% center; }
+}
+
+/* 5. Fysieke knop-interactie bij aanraking */
+.btn-press:active {
+  transform: scale(0.96);
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
 }
