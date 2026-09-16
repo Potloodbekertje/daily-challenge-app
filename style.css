@@ -66,4 +66,21 @@ body {
 .btn-press:active {
   transform: scale(0.96);
   transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* 6. Dynamisch zwevend logo met pulserende gloed */
+.logo-dynamic {
+  /* Afgeronde hoeken voor het geval het icon.png een vierkant is */
+  border-radius: 25%; 
+  animation: logoFloat 4s ease-in-out infinite, logoGlow 4s infinite alternate;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-6px) scale(1.03); }
+}
+
+@keyframes logoGlow {
+  from { filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.4)); }
+  to { filter: drop-shadow(0 0 25px rgba(236, 72, 153, 0.7)); }
+}
 }
